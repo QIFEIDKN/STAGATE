@@ -1,4 +1,4 @@
-# STGATE
+# STAGATE
 ![](https://github.com/QIFEIDKN/STAGATE/blob/main/STAGATE_Overview.png)
 
 ## Overview
@@ -15,7 +15,7 @@ scanpy
 tensorflow==1.15.0
 
 ## Installation
-cd STGATE-main
+cd STAGATE-main
 
 python setup.py build
 
