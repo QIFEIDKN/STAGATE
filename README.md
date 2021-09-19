@@ -1,4 +1,6 @@
 # STGATE
+![](https://github.com/QIFEIDKN/STAGATE/blob/main/STAGATE_Overview.png)
+
 ## Overview
 STAGATE is designed for spatial clustering and denoising expressions of spatial resolved transcriptomics (ST) data.
 
