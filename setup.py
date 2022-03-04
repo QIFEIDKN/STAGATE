@@ -1,7 +1,7 @@
 from setuptools import Command, find_packages, setup
 
 __lib_name__ = "STAGATE"
-__lib_version__ = "1.0"
+__lib_version__ = "1.0.1"
 __description__ = "Deciphering spatial domains from spatially resolved transcriptomics with adaptive graph attention auto-encoder"
 __url__ = "https://github.com/QIFEIDKN/STAGATE"
 __author__ = "Kangning Dong"

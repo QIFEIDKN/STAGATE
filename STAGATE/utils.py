@@ -3,8 +3,7 @@ import numpy as np
 import sklearn.neighbors
 
 
-def Cal_Spatial_Net(adata, rad_cutoff=None, k_cutoff=None,
-                    max_neigh=50, model='Radius', verbose=True):
+def Cal_Spatial_Net(adata, rad_cutoff=None, k_cutoff=None, model='Radius', verbose=True):
     """\
     Construct the spatial neighbor networks.
 
@@ -31,37 +30,37 @@ def Cal_Spatial_Net(adata, rad_cutoff=None, k_cutoff=None,
     coor.index = adata.obs.index
     coor.columns = ['imagerow', 'imagecol']
 
-    nbrs = sklearn.neighbors.NearestNeighbors(
-        n_neighbors=max_neigh+1, algorithm='ball_tree').fit(coor)
-    distances, indices = nbrs.kneighbors(coor)
-    if model == 'KNN':
-        indices = indices[:, 1:k_cutoff+1]
-        distances = distances[:, 1:k_cutoff+1]
     if model == 'Radius':
-        indices = indices[:,1:]
-        distances = distances[:, 1:]
+        nbrs = sklearn.neighbors.NearestNeighbors(radius=rad_cutoff).fit(coor)
+        distances, indices = nbrs.radius_neighbors(coor, return_distance=True)
+        KNN_list = []
+        for it in range(indices.shape[0]):
+            KNN_list.append(pd.DataFrame(zip([it]*indices[it].shape[0], indices[it], distances[it])))
+    
+    if model == 'KNN':
+        nbrs = sklearn.neighbors.NearestNeighbors(n_neighbors=k_cutoff+1).fit(coor)
+        distances, indices = nbrs.kneighbors(coor)
+        KNN_list = []
+        for it in range(indices.shape[0]):
+            KNN_list.append(pd.DataFrame(zip([it]*indices.shape[1],indices[it,:], distances[it,:])))
 
-    KNN_list = []
-    for it in range(indices.shape[0]):
-        KNN_list.append(pd.DataFrame(zip([it]*indices.shape[1],indices[it,:], distances[it,:])))
     KNN_df = pd.concat(KNN_list)
     KNN_df.columns = ['Cell1', 'Cell2', 'Distance']
 
     Spatial_Net = KNN_df.copy()
-    if model == 'Radius':
-        Spatial_Net = KNN_df.loc[KNN_df['Distance']<rad_cutoff, ]
+    Spatial_Net = Spatial_Net.loc[Spatial_Net['Distance']>0,]
     id_cell_trans = dict(zip(range(coor.shape[0]), np.array(coor.index), ))
     Spatial_Net['Cell1'] = Spatial_Net['Cell1'].map(id_cell_trans)
     Spatial_Net['Cell2'] = Spatial_Net['Cell2'].map(id_cell_trans)
     if verbose:
         print('The graph contains %d edges, %d cells.' %(Spatial_Net.shape[0], adata.n_obs))
         print('%.4f neighbors per cell on average.' %(Spatial_Net.shape[0]/adata.n_obs))
+
     adata.uns['Spatial_Net'] = Spatial_Net
 
 
 def Cal_Spatial_Net_3D(adata, rad_cutoff_2D, rad_cutoff_Zaxis,
-                       key_section='Section_id', section_order=None,
-                       max_neigh=50, verbose=True):
+                       key_section='Section_id', section_order=None, verbose=True):
     """\
     Construct the spatial neighbor networks.
 
@@ -93,7 +92,7 @@ def Cal_Spatial_Net_3D(adata, rad_cutoff_2D, rad_cutoff_Zaxis,
             print('------Calculating 2D SNN of section ', temp_section)
         temp_adata = adata[adata.obs[key_section] == temp_section, ]
         Cal_Spatial_Net(
-            temp_adata, rad_cutoff=rad_cutoff_2D, max_neigh=max_neigh, verbose=False)
+            temp_adata, rad_cutoff=rad_cutoff_2D, verbose=False)
         temp_adata.uns['Spatial_Net']['SNN'] = temp_section
         if verbose:
             print('This graph contains %d edges, %d cells.' %
@@ -112,7 +111,7 @@ def Cal_Spatial_Net_3D(adata, rad_cutoff_2D, rad_cutoff_Zaxis,
         temp_adata = adata[adata.obs[key_section].isin(
             [section_1, section_2]), ]
         Cal_Spatial_Net(
-            temp_adata, rad_cutoff=rad_cutoff_2D, max_neigh=max_neigh*2, verbose=False)
+            temp_adata, rad_cutoff=rad_cutoff_Zaxis, verbose=False)
         spot_section_trans = dict(
             zip(temp_adata.obs.index, temp_adata.obs[key_section]))
         temp_adata.uns['Spatial_Net']['Section_id_1'] = temp_adata.uns['Spatial_Net']['Cell1'].map(
@@ -168,7 +167,7 @@ def mclust_R(adata, num_cluster, modelNames='EEE', used_obsm='STAGATE', random_s
     r_random_seed(random_seed)
     rmclust = robjects.r['Mclust']
 
-    res = rmclust(rpy2.robjects.numpy2ri.numpy2ri(adata.obsm[used_obsm]), num_cluster, modelNames)
+    res = rmclust(rpy2.robjects.numpy2ri.numpy2rpy(adata.obsm[used_obsm]), num_cluster, modelNames)
     mclust_res = np.array(res[-2])
 
     adata.obs['mclust'] = mclust_res
