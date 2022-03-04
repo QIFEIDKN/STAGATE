@@ -4,7 +4,7 @@
 ## News
 2022.03.05 STAGATE based on pyG (PyTorch Geometric) framework is availble at [STAGATE_pyG](https://github.com/QIFEIDKN/STAGATE_pyG).
 
-Benefit from the optimization of the pyG package for training graph neural networks, it is more than 10x faster than STAGATE based on the tensorflow1 framework, and can use a batch training strategy to deal with large-scale data (See Tutorial 7).
+Benefit from the optimization of the pyG package for training graph neural networks, it is more than 10x faster than STAGATE based on the tensorflow1 framework, and can use a batch training strategy to deal with large-scale data.
 
 ## Overview
 STAGATE is designed for spatial clustering and denoising expressions of spatial resolved transcriptomics (ST) data.
